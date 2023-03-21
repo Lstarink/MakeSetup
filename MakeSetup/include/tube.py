@@ -19,7 +19,7 @@ class tube:
         tube.tube_angles(self)
      
     def CalculateArea(self):
-        area = 0.25*np.pi*self.width**2 #calculation for square tubes to keep things simpler when calculating tube volume intersect
+        area = 0.25*np.pi*self.width*self.width
         return(area)
     
     def CalculateVolume(self):

@@ -10,7 +10,7 @@ Settings for what is used en where to save it
 """
 recalculate_gram_matrix = True
 
-FileName = '3D_setup2.csv'
+FileName = 'final_setup.csv'
 Name_of_calculation = 'final_setup_new'
 # generated_measurement_file = 'Speeds' + Name_of_calculation + '.npy'
 # if generate_your_own_measurement:
@@ -59,4 +59,4 @@ view_mesh = False
 
 ###Settings hieronder hebben jullie niet nodig!!
 
-plot_tube_intersections = False and use_integration_for_gram_matrix
+plot_tube_intersections = False

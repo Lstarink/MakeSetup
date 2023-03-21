@@ -50,9 +50,10 @@ class Measurement_setup:
         ax.set_zlabel('z as [m]')
 
         for i in range(len(self.lines)):
-            ax.plot([self.lines[i].A[0], self.lines[i].B[0]],
-                     [self.lines[i].A[1], self.lines[i].B[1]],
-                     [self.lines[i].A[2], self.lines[i].B[2]], color='b')
+            if i > 50:
+                ax.plot([self.lines[i].A[0], self.lines[i].B[0]],
+                         [self.lines[i].A[1], self.lines[i].B[1]],
+                         [self.lines[i].A[2], self.lines[i].B[2]], color='b')
         plt.show()
         return()
     

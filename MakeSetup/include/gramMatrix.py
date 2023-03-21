@@ -4,14 +4,14 @@ Created on Thu May  5 13:03:25 2022
 
 @author: lstar
 """
+import matplotlib.pyplot as plt
 import numpy as np
 import helpers
 import pygmsh
 from ogs5py import OGS
-
-
-
+import tqdm
 import settings
+
 
 class GramMatrix:
     def __init__(self, tubes, grid_size, intersection_matrix):
@@ -21,34 +21,37 @@ class GramMatrix:
         self.gram_matrix = np.zeros([len(tubes), len(tubes)])
         self.resolution = settings.matrix_integration_setting
         GramMatrix.MakeGramMatrix_pygmsh(self)
+        plt.figure()
+        plt.matshow(self.gram_matrix)
+        plt.show()
 
     def MakeGramMatrix_pygmsh(self):
-        previous_configurations = []
-        volume_intersect = 0
         for m, tube_1 in enumerate(self.tubes):
             print("Gram matrix calculated for: " + str(100*m/len(self.tubes)) + "%")
             for n, tube_2 in enumerate(self.tubes):
+                volume_intersect = 0
                 dot_unit_vectors = np.dot(tube_1.line.unit_vector, tube_2.line.unit_vector)
+                denominator = tube_1.area * tube_2.area * tube_1.line.length * tube_2.line.length
+
                 if (m != n):
                     if (abs(np.dot(tube_1.line.unit_vector, tube_2.line.unit_vector)) < 0.999):
                         does_intersect, offset = GramMatrix.CanIntersect(self, tube_1, tube_2)
                         if does_intersect:
-                            volume_intersect = GramMatrix.TubesVolumeIntersectMesh(tube_1, tube_2)
+                            volume_intersect = GramMatrix.TubesVolumeIntersectMesh(self, tube_1, tube_2, m, n)
                 else:
                     volume_intersect = tube_1.volume
-                denominator = tube_1.area * tube_2.area * tube_1.line.length * tube_2.line.length
                 self.gram_matrix[m][n] = volume_intersect * dot_unit_vectors / denominator
         try:
             np.save('..\output\calculations_' + settings.Name_of_calculation + '\gramMatrix.npy', self.gram_matrix)
         except FileExistsError:
             print("Gram Matrix already exists in this directory")
 
-    def TubesVolumeIntersectMesh(tube_1, tube_2):
+    def TubesVolumeIntersectMesh(self, tube_1, tube_2, m, n):
         with pygmsh.occ.Geometry() as geom:
             geom.characteristic_length_max = tube_1.width/settings.mesh_density
             cylinders = [
-                geom.add_cylinder(tube_1.line.A, tube_1.line.unit_vector*tube_1.line.length, tube_1.width/2),
-                geom.add_cylinder(tube_2.line.A, tube_2.line.unit_vector*tube_2.line.length, tube_2.width/2),
+                geom.add_cylinder(tube_1.line.A-tube_1.line.unit_vector*tube_1.line.length, 2*tube_1.line.unit_vector*tube_1.line.length, tube_1.width/2),
+                geom.add_cylinder(tube_2.line.A-tube_2.line.unit_vector*tube_2.line.length, 2*tube_2.line.unit_vector*tube_2.line.length, tube_2.width/2),
             ]
             try:
                 geom.boolean_intersection(cylinders)
@@ -57,7 +60,7 @@ class GramMatrix:
             except RuntimeError:
                 volume_intersect = 0
 
-        if settings.view_mesh:
+        if settings.view_mesh and ((m > 50) or (n > 50)):
             model = OGS()
             # generate example above
             model.msh.import_mesh(mesh, import_dim=3)
